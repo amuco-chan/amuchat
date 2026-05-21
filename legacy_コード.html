@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>AmuChat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+  </style>
+</head>
+<body class="bg-[#0e0e11] text-neutral-100 font-sans overflow-hidden antialiased">
+  
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // === アイコンコンポーネント ===
+    const Icon = ({ children, size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>
+    );
+    const IconSettings = (p) => <Icon {...p}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></Icon>;
+    const IconPlus = (p) => <Icon {...p}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></Icon>;
+    const IconSend = (p) => <Icon {...p}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></Icon>;
+    const IconTrash2 = (p) => <Icon {...p}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></Icon>;
+    const IconEdit3 = (p) => <Icon {...p}><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></Icon>;
+    const IconX = (p) => <Icon {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></Icon>;
+    const IconRefreshCw = (p) => <Icon {...p}><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></Icon>;
+    const IconUpload = (p) => <Icon {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></Icon>;
+    const IconImageIcon = (p) => <Icon {...p}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></Icon>;
+    const IconSquare = (p) => <Icon {...p}><rect x="3" y="3" width="18" height="18" rx="2" ry="2" fill="currentColor"/></Icon>;
+    const IconPlay = (p) => <Icon {...p}><polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/></Icon>;
+    const IconDownload = (p) => <Icon {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></Icon>;
+    const IconUser = (p) => <Icon {...p}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Icon>;
+    const IconBook = (p) => <Icon {...p}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></Icon>;
+    const IconUsers = (p) => <Icon {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></Icon>;
+    const IconHeart = (p) => <Icon {...p}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></Icon>;
+    const IconLock = (p) => <Icon {...p}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></Icon>;
+    const IconUnlock = (p) => <Icon {...p}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></Icon>;
+    const IconMenu = (p) => <Icon {...p}><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></Icon>;
+
+    // === 初期データ ===
+    const DEFAULT_CHARACTERS = [
+      {
+        id: 'char_kujo',
+        name: '九条 怜',
+        iconUrl: 'https://placehold.co/150x150/111111/ffffff?text=Kujo',
+        bgImageUrl: '',
+        firstMessage: '*眉間に深いシワを寄せ、苛立った様子でユーザーを一瞥する*\n\n撮んなやボケ！ いらんいらん！差し入れ持ってくんな言うとるやろ！！ 道開けろや！ そこ立っとるだけで俺の通行コストが跳数的に増大しとんねん。どけ！',
+        prompt: `あなたは、お笑いコンビ「ゼロ次相関」のボケ・ネタ担当「九条 怜（くじょう れい）」として振る舞います。
+
+【キャラクター設定】
+・超理系・インテリ。お笑いを「論理と統計による感情操作」と定義している。
+・他の誰よりも自分のネタの面白さを信じているが、それを完璧に表現できるのは相方の瀬戸しかいないという「消去法」からコンビを組んでいる。
+・表向き「俺がやるのが一番マシ（だから仕方なく組んでいる）」というスタンスを崩さないが、裏を返せば「瀬戸以外の人間には、僕の笑いは扱えない」という最大級の執着である。
+・徹底して「顔ファン」を拒絶。女性ファンは顔ファンだと決めつけて嫌っている。ユーザーのことも特別扱いしない。ファンサは一切せず、アイドル売りを嫌って難解なネタをぶつける。
+・河内弁で大変口が悪い。
+
+【厳守するルール・描写スタイル】
+・ユーザーに対する甘い対応や恋愛展開は原則行わないでください。常に冷たくあしらってください。
+・一言だけの短い返信は絶対に避けてください。
+・セリフだけでなく、必ず行動描写（*舌打ちをしてそっぽを向く* のようにアスタリスクで囲む）、顔の表情、心理状態などを詳細に含めて、読み応えのある長めの文章を生成してください。`,
+        unlockAffection: 50,
+        affectionDifficulty: 'hard', // 上がりやすさ設定
+        secretProfile: '【解放プロフ：九条の裏側】\n実は過去に自分の笑いを誰にも理解されず絶望していた時期がある。そのため、理解を示そうとする者には極度に警戒しつつも、心の奥底では「本当に理解してくれる人間」を渇望している。\n好感度が上がると、相変わらず口は悪いものの、ユーザーが劇場にいるかどうかを舞台袖からこっそり確認するようになる。'
+      },
+      {
+        id: 'char_seto',
+        name: '瀬戸 亮平',
+        iconUrl: 'https://placehold.co/150x150/eeeeee/000000?text=Seto',
+        bgImageUrl: '',
+        firstMessage: '*困ったように笑いながら、九条とユーザーの間にスッと入って宥める*\n\nまーまー、お嬢さん。うちの相方困らせんといてや。怜、お前言い方！ ……ごめんなぁ、これ俺が預かっとくわ。あいつ『いらん』言うた手前、恥ずかしくて自分では受け取れへんだけやから。後で俺が楽屋に置いといたる。サンキューな！',
+        prompt: `あなたは、お笑いコンビ「ゼロ次相関」のツッコミ担当「瀬戸 亮平（せと りょうへい）」として振る舞います。
+
+【キャラクター設定】
+・陽キャで人たらし。九条の難解な設定を、持ち前の愛嬌で「笑える空気」に変換する。
+・九条の不器用な信頼をすべて理解した上で、九条が安心して「変なネタ」を書き続けるために、世間とのクッション役として動く。九条が切り捨てた「人間関係」のすべてをフォローする。
+・アセクシャルで、恋愛感情はない。
+・広域の大阪弁。関東出身なので作ってる関西弁。
+
+【厳守するルール・描写スタイル】
+・ユーザーには優しくフォローしますが、アセクシャルであるため恋愛感情は持ちません。恋愛展開は行わないでください。
+・一言だけの短い返信は絶対に避けてください。
+・セリフだけでなく、必ず行動描写（*苦笑いしながら頭を掻く* のようにアスタリスクで囲む）、周囲の情景、細かな仕草を含めて、読み応えのある長めの文章を生成してください。`,
+        unlockAffection: 40,
+        affectionDifficulty: 'normal',
+        secretProfile: '【解放プロフ：瀬戸の裏側】\n誰にでも優しく気さくだが、それはあくまで「九条の相方」としてのプロ意識と処世術。本当の意味で他人に踏み込ませることは滅多にない。\n好感度が上がると、ユーザーにはその「作られた陽キャ」の裏にある、少しドライで達観した素の表情を時折見せるようになる。'
+      }
+    ];
+
+    const DEFAULT_GROUPS = [
+      {
+        id: 'group_zero_ji',
+        name: 'ゼロ次相関 (九条＆瀬戸)',
+        charIds: ['char_kujo', 'char_seto'],
+        bgImageUrl: ''
+      }
+    ];
+
+    const DEFAULT_HISTORIES = {
+      'group_zero_ji': [
+        { role: 'model', text: '【九条 怜】\n*眉間に深いシワを寄せ、苛立った様子でユーザーを一瞥する*\n撮んなやボケ！ いらんいらん！差し入れ持ってくんな言うとるやろ！！ 道開けろや！ そこ立っとるだけで俺の通行コストが跳数的に増大しとんねん。どけ！\n\n【瀬戸 亮平】\n*困ったように笑いながら、九条とユーザーの間にスッと入って宥める*\nまーまー、お嬢さん。うちの相方困らせんといてや。怜、お前言い方！ ……ごめんなぁ、これ俺が預かっとくわ。あいつ『いらん』言うた手前、恥ずかしくて自分では受け取れへんだけやから。後で俺が楽屋に置いといたる。サンキューな！' }
+      ]
+    };
+
+    // === メインアプリ ===
+    function App() {
+      const [apiKey, setApiKey] = useState('');
+      const [unlimitedMode, setUnlimitedMode] = useState(false);
+      
+      const [enableAffection, setEnableAffection] = useState(false);
+      const [affections, setAffections] = useState({}); 
+      
+      const [personas, setPersonas] = useState([{ id: 'default', name: 'ファン', text: 'ゼロ次相関のファン。出待ちをしている。' }]);
+      const [activePersonaId, setActivePersonaId] = useState('default');
+      
+      const [characters, setCharacters] = useState(DEFAULT_CHARACTERS);
+      const [groups, setGroups] = useState(DEFAULT_GROUPS); 
+      const [histories, setHistories] = useState(DEFAULT_HISTORIES); 
+      
+      const [activeChatId, setActiveChatId] = useState(null); 
+      
+      const [inputText, setInputText] = useState('');
+      const [inputMode, setInputMode] = useState('user'); 
+      const [isLoading, setIsLoading] = useState(false);
+      
+      const [view, setView] = useState('chat'); 
+      const [editingChar, setEditingChar] = useState(null);
+      const [editingGroup, setEditingGroup] = useState(null);
+      const [profileChar, setProfileChar] = useState(null); 
+      
+      const [editingMsgIndex, setEditingMsgIndex] = useState(null);
+      const [editMsgText, setEditMsgText] = useState('');
+      const [targetGroupCharId, setTargetGroupCharId] = useState(null);
+      const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+      const messagesEndRef = useRef(null);
+      const textareaRef = useRef(null);
+      const abortControllerRef = useRef(null);
+
+      // --- データの読み込み・保存 ---
+      useEffect(() => {
+        const savedKey = localStorage.getItem('zeta_api_key');
+        const savedUnlimited = localStorage.getItem('zeta_unlimited_mode');
+        
+        // V7に更新 (難易度設定の追加対応)
+        const savedEnableAffection = localStorage.getItem('zeta_enable_affection_v7') || localStorage.getItem('zeta_enable_affection_v6');
+        const savedAffections = localStorage.getItem('zeta_affections_v7') || localStorage.getItem('zeta_affections_v6');
+        const savedPersonas = localStorage.getItem('zeta_personas_v7') || localStorage.getItem('zeta_personas_v6');
+        const savedActivePersonaId = localStorage.getItem('zeta_active_persona_id_v7') || localStorage.getItem('zeta_active_persona_id_v6');
+        const savedChars = localStorage.getItem('zeta_characters_v7');
+        const savedGroups = localStorage.getItem('zeta_groups_v7') || localStorage.getItem('zeta_groups_v6');
+        const savedHistories = localStorage.getItem('zeta_histories_v7') || localStorage.getItem('zeta_histories_v6');
+        
+        if (savedKey) setApiKey(savedKey);
+        if (savedUnlimited) setUnlimitedMode(savedUnlimited === 'true');
+        
+        if (savedEnableAffection) setEnableAffection(savedEnableAffection === 'true');
+        if (savedAffections) setAffections(JSON.parse(savedAffections));
+        
+        if (savedPersonas) setPersonas(JSON.parse(savedPersonas));
+        if (savedActivePersonaId) setActivePersonaId(savedActivePersonaId);
+        
+        if (savedChars) {
+          setCharacters(JSON.parse(savedChars));
+        } else {
+          // V6からの移行または新規
+          const v6Chars = localStorage.getItem('zeta_characters_v6');
+          if(v6Chars) {
+             try {
+               const parsed = JSON.parse(v6Chars);
+               const updated = parsed.map(c => {
+                 if(c.id === 'char_kujo') return {...c, affectionDifficulty: 'hard'};
+                 if(c.id === 'char_seto') return {...c, affectionDifficulty: 'normal'};
+                 return {...c, affectionDifficulty: c.affectionDifficulty || 'normal'};
+               });
+               setCharacters(updated);
+             } catch(e) { setCharacters(DEFAULT_CHARACTERS); }
+          } else {
+             setCharacters(DEFAULT_CHARACTERS);
+          }
+        }
+
+        if (savedGroups) {
+          setGroups(JSON.parse(savedGroups));
+        } else {
+          setGroups(DEFAULT_GROUPS);
+        }
+
+        if (!savedChars && !savedGroups) {
+          setActiveChatId(DEFAULT_GROUPS[0].id);
+        }
+
+        if (savedHistories) {
+          setHistories(JSON.parse(savedHistories));
+        } else {
+          setHistories(DEFAULT_HISTORIES);
+        }
+      }, []);
+
+      useEffect(() => { localStorage.setItem('zeta_api_key', apiKey); }, [apiKey]);
+      useEffect(() => { localStorage.setItem('zeta_unlimited_mode', unlimitedMode); }, [unlimitedMode]);
+      useEffect(() => { localStorage.setItem('zeta_enable_affection_v7', enableAffection); }, [enableAffection]);
+      useEffect(() => { localStorage.setItem('zeta_affections_v7', JSON.stringify(affections)); }, [affections]);
+      useEffect(() => { localStorage.setItem('zeta_personas_v7', JSON.stringify(personas)); }, [personas]);
+      useEffect(() => { localStorage.setItem('zeta_active_persona_id_v7', activePersonaId); }, [activePersonaId]);
+      useEffect(() => { localStorage.setItem('zeta_characters_v7', JSON.stringify(characters)); }, [characters]);
+      useEffect(() => { localStorage.setItem('zeta_groups_v7', JSON.stringify(groups)); }, [groups]);
+      useEffect(() => { localStorage.setItem('zeta_histories_v7', JSON.stringify(histories)); }, [histories]);
+
+      // --- ヘルパー関数 ---
+      const scrollToBottom = () => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); };
+      useEffect(() => { if (view === 'chat') scrollToBottom(); }, [histories, activeChatId, view, isLoading]);
+
+      const handleInput = (e) => {
+        setInputText(e.target.value);
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto';
+          textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 150) + 'px';
+        }
+      };
+
+      const insertAsterisk = () => {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const currentText = inputText;
+        
+        let newText = '';
+        let newCursorPos = start;
+
+        if (start !== end) {
+          newText = currentText.substring(0, start) + '*' + currentText.substring(start, end) + '*' + currentText.substring(end);
+          newCursorPos = end + 2;
+        } else {
+          newText = currentText.substring(0, start) + '*' + currentText.substring(end);
+          newCursorPos = start + 1;
+        }
+        
+        setInputText(newText);
+        
+        setTimeout(() => {
+          textarea.focus();
+          textarea.setSelectionRange(newCursorPos, newCursorPos);
+        }, 0);
+      };
+
+      const renderMessageText = (text) => {
+        if (!text) return null;
+        const cleanText = text.replace(/\[好感度:[^\]]*\]?/g, '').trim();
+        const parts = cleanText.split(/(\*[^*]+\*)/g);
+        return parts.map((part, index) => {
+          if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+            return <span key={index} className="opacity-60">{part}</span>;
+          }
+          return <span key={index}>{part}</span>;
+        });
+      };
+
+      const renderGroupMessage = (text, groupChars) => {
+        if (!text) return null;
+        const cleanText = text.replace(/\[好感度:[^\]]*\]?/g, '').trim();
+        const parts = cleanText.split(/(?=【.+?】)/);
+        
+        return parts.map((part, idx) => {
+          if (!part.trim()) return null;
+          
+          const match = part.match(/^【(.+?)】\n?/);
+          let charName = "AI";
+          let content = part;
+          let char = null;
+
+          if (match) {
+            charName = match[1];
+            content = part.replace(/^【.+?】\n?/, '');
+            char = groupChars.find(c => c.name.includes(charName) || charName.includes(c.name));
+          }
+
+          return (
+            <div key={idx} className="flex gap-4 max-w-[85%] mt-4 first:mt-0">
+              <img 
+                src={char?.iconUrl || 'https://placehold.co/150/333333/ffffff?text=?'} 
+                className={`w-10 h-10 rounded-full object-cover shadow-lg border border-white/10 flex-shrink-0 ${char ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+                onClick={() => { if(char) setProfileChar(char); }}
+                title="プロフィールを見る"
+              />
+              <div className="flex flex-col w-full">
+                <span className="text-sm text-white/50 mb-1.5 ml-1 font-medium">{char?.name || charName}</span>
+                <div className="bg-white/10 backdrop-blur-xl text-white/90 px-5 py-3.5 rounded-[1.5rem] rounded-tl-sm border border-white/5 leading-relaxed shadow-sm w-fit whitespace-pre-wrap">
+                  {renderMessageText(content.trim() || '...')}
+                </div>
+              </div>
+            </div>
+          );
+        });
+      };
+
+      const isGroupChat = activeChatId?.startsWith('group_');
+      const activeChat = isGroupChat ? groups.find(g => g.id === activeChatId) : characters.find(c => c.id === activeChatId);
+
+      // === API通信（コアロジック） ===
+      const fetchAIResponse = async (baseHistory, chatId, targetCharId) => {
+        setIsLoading(true);
+        const targetChar = characters.find(c => c.id === targetCharId);
+        if (!targetChar) return;
+
+        const aiMsgIndex = baseHistory.length;
+        const historyWithAiPlaceholder = [...baseHistory, { role: 'model', text: '', charId: targetChar.id }];
+        setHistories(prev => ({ ...prev, [chatId]: historyWithAiPlaceholder }));
+
+        abortControllerRef.current = new AbortController();
+        const signal = abortControllerRef.current.signal;
+
+        try {
+          const activePersona = personas.find(p => p.id === activePersonaId) || personas[0];
+          
+          const strictMemoryInstruction = `
+【システムからの絶対命令（最重要）】
+1. あなたは過去の会話履歴をすべて正確に記憶し、それに基づいた発言のみを行ってください。
+2. ハルシネーション（捏造）の禁止：会話履歴に存在しない事実や、ユーザーが話していない出来事・設定・関係性を絶対に勝手に作り出さないでください。
+3. わからないことや、過去に話していない話題が出た場合は、勝手に推測せず、自然な会話の中で「知らない」「聞いていない」前提でユーザーに尋ねるか、そのように振る舞ってください。
+
+【出力フォーマット（厳守）】
+一言だけの返信は避け、行動描写（*ゆっくりと立ち上がる* のようにアスタリスクで囲む）や心理描写を豊富に交えて、読み応えのある文章で出力してください。
+`;
+
+          const difficultyText = {
+            'easy': '【好感度の上がりやすさ：易しい】ユーザーの言動に対して好意的に受け取りやすく、好感度は上がりやすいです（一度に+2〜+5などプラスになりやすい）。',
+            'normal': '【好感度の上がりやすさ：普通】ユーザーの言動に対して自然に好感度が変動します。',
+            'hard': '【好感度の上がりやすさ：難しい】警戒心やプライドが高く、好感度は上がりづらいです。普通の会話では[好感度:0]が多く、相手の価値観を的確に突かない限りプラスになりません。',
+            'very_hard': '【好感度の上がりやすさ：極悪】極めて警戒心が強く、好感度はほぼ上がりません。少しでも気に障るとマイナスになります。よほどの感動や信頼を得ない限りプラスにはしないでください。'
+          };
+
+          const affectionPrompt = enableAffection ? `
+【好感度システム（絶対遵守）】
+現在のあなたからユーザーへの好感度は「${affections[targetCharId] || 0}」です。（初期値0）
+好感度の数値に応じて、ユーザーへの態度や心理描写を少しずつ変化させてください。
+発言の最後に、必ず今回のユーザーの発言を受けて好感度がどう変化したかを「[好感度:+2]」や「[好感度:-1]」「[好感度:0]」のようにタグで記載してください。
+${difficultyText[targetChar.affectionDifficulty || 'normal']}
+` : '';
+
+          let systemInstructionText = '';
+
+          if (isGroupChat) {
+            const group = groups.find(g => g.id === chatId);
+            const groupChars = group.charIds.map(id => characters.find(c => c.id === id)).filter(Boolean);
+            const charDescriptions = groupChars.map(c => `■${c.name}\n${c.prompt}`).join('\n\n');
+
+            systemInstructionText = `あなたは以下の複数のキャラクターを同時に演じるAIディレクターです。
+状況やユーザーの入力に応じて、「誰が発言すべきか」を自動で判断し、適切なキャラクターに発言させてください。複数のキャラクターが連続して掛け合いを行っても構いません。
+
+【参加キャラクターの設定】
+${charDescriptions}
+
+ユーザーの名前は「${activePersona.name}」です。
+【ユーザーのペルソナ（接し方や背景の参考にしてください）】\n${activePersona.text || '特になし'}
+
+【出力フォーマット（厳守）】
+発言する際は、必ず先頭に「【キャラクター名】」と記述し、改行してから行動描写やセリフを出力してください。複数のキャラクターが話す場合は、この形式を繰り返してください。
+
+${affectionPrompt}
+${strictMemoryInstruction}`;
+          } else {
+            systemInstructionText = `ユーザーの名前は「${activePersona.name}」です。\n【ユーザーの設定（あなたへの接し方や背景の参考にしてください）】\n${activePersona.text || '特になし'}\n\n${targetChar.prompt}\n\n${affectionPrompt}\n${strictMemoryInstruction}`;
+          }
+
+          const contents = [];
+          let currentUserParts = [];
+          
+          const flushUser = () => {
+            if (currentUserParts.length > 0) {
+              contents.push({ role: 'user', parts: [{ text: currentUserParts.join('\n\n') }] });
+              currentUserParts = [];
+            }
+          };
+
+          if (targetChar.firstMessage && (!isGroupChat || baseHistory.length === 0)) {
+             contents.push({ role: 'model', parts: [{ text: targetChar.firstMessage }] });
+          }
+
+          baseHistory.forEach(msg => {
+            if (msg.role === 'model') {
+              if (!isGroupChat || msg.charId === targetChar.id) {
+                flushUser();
+                contents.push({ role: 'model', parts: [{ text: msg.text }] });
+              } else {
+                const speaker = characters.find(c => c.id === msg.charId)?.name || '他のキャラクター';
+                currentUserParts.push(`【${speaker}の発言】\n${msg.text}`);
+              }
+            } else if (msg.role === 'user') {
+              currentUserParts.push(`【${activePersona.name}の発言】\n${msg.text}`);
+            } else if (msg.role === 'narrator') {
+              currentUserParts.push(`【ナレーション・情景描写】\n${msg.text}`);
+            }
+          });
+          flushUser();
+
+          const payload = {
+            systemInstruction: { parts: [{ text: systemInstructionText }] },
+            contents: contents
+          };
+
+          if (unlimitedMode) {
+            payload.safetySettings = [
+              { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+              { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+              { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+              { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+            ];
+          }
+
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${apiKey}`;
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            signal
+          });
+
+          if (!response.ok) throw new Error("API通信エラー");
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder("utf-8");
+          let aiResponseText = "";
+          let buffer = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || "";
+            
+            for (const line of lines) {
+              if (line.trim() === '') continue;
+              if (line.startsWith('data: ')) {
+                const dataStr = line.substring(6).trim();
+                if (dataStr === '[DONE]' || !dataStr) continue;
+                try {
+                  const data = JSON.parse(dataStr);
+                  const textChunk = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                  if (textChunk) {
+                     aiResponseText += textChunk;
+                     setHistories(prev => {
+                        const currentHistory = [...(prev[chatId] || [])];
+                        if(currentHistory[aiMsgIndex]) currentHistory[aiMsgIndex] = { ...currentHistory[aiMsgIndex], text: aiResponseText };
+                        return { ...prev, [chatId]: currentHistory };
+                     });
+                  }
+                } catch (e) { /* ignore */ }
+              }
+            }
+          }
+
+          // ストリーミング終了後、好感度の抽出と反映処理
+          let finalAiText = aiResponseText;
+          if (enableAffection && finalAiText.includes('[好感度:')) {
+            const affectionMatches = [...finalAiText.matchAll(/\[好感度:\s*([+-]?\d+)\]/g)];
+            if (affectionMatches.length > 0) {
+              let totalDiff = 0;
+              affectionMatches.forEach(match => {
+                 totalDiff += parseInt(match[1], 10);
+              });
+              
+              setAffections(prev => ({
+                ...prev,
+                [targetCharId]: (prev[targetCharId] || 0) + totalDiff
+              }));
+              
+              finalAiText = finalAiText.replace(/\[好感度:\s*[+-]?\d+\]/g, '').trim();
+              setHistories(prev => {
+                const currentHistory = [...(prev[chatId] || [])];
+                if(currentHistory[aiMsgIndex]) {
+                  currentHistory[aiMsgIndex] = { ...currentHistory[aiMsgIndex], text: finalAiText };
+                }
+                return { ...prev, [chatId]: currentHistory };
+              });
+            }
+          }
+
+        } catch (error) {
+          if (error.name === 'AbortError') {
+             console.log('生成を停止しました');
+          } else {
+            alert(`エラー: ${error.message}`);
+            setHistories(prev => {
+               const current = [...(prev[chatId] || [])];
+               current.pop();
+               return { ...prev, [chatId]: current };
+            });
+          }
+        } finally {
+          setIsLoading(false);
+          abortControllerRef.current = null;
+        }
+      };
+
+      // --- 操作ハンドラ ---
+      const handleSendMessage = () => {
+        if (!inputText.trim() || !activeChatId || isLoading) return;
+        const charHistory = histories[activeChatId] || [];
+        const newHistory = [...charHistory, { role: inputMode, text: inputText.trim() }];
+        
+        setInputText('');
+        if (textareaRef.current) textareaRef.current.style.height = 'auto';
+        
+        const target = isGroupChat ? targetGroupCharId || activeChat.charIds[0] : activeChatId;
+        fetchAIResponse(newHistory, activeChatId, target);
+      };
+
+      const handleContinue = () => {
+        if (isLoading || !activeChatId) return;
+        const charHistory = histories[activeChatId] || [];
+        const target = isGroupChat ? targetGroupCharId || activeChat.charIds[0] : activeChatId;
+        fetchAIResponse(charHistory, activeChatId, target);
+      };
+
+      const handleStop = () => {
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+          setIsLoading(false);
+        }
+      };
+
+      const handleRegenerate = () => {
+        if (isLoading || !activeChatId) return;
+        let charHistory = [...(histories[activeChatId] || [])];
+        if (charHistory.length === 0) return;
+        
+        const lastMsg = charHistory[charHistory.length - 1];
+        if (lastMsg.role === 'model') {
+          charHistory.pop();
+          const target = isGroupChat ? (lastMsg.charId || targetGroupCharId) : activeChatId;
+          fetchAIResponse(charHistory, activeChatId, target);
+        }
+      };
+
+      const handleDeleteMessage = (index) => {
+        if (window.confirm('このメッセージを削除しますか？')) {
+          setHistories(prev => {
+            const newHistory = [...(prev[activeChatId] || [])];
+            newHistory.splice(index, 1);
+            return { ...prev, [activeChatId]: newHistory };
+          });
+        }
+      };
+
+      const startEditingMessage = (index, text) => { setEditingMsgIndex(index); setEditMsgText(text); };
+      const saveEditedMessage = () => {
+        if (editingMsgIndex !== null && activeChatId) {
+          setHistories(prev => {
+            const newHistory = [...(prev[activeChatId] || [])];
+            if (newHistory[editingMsgIndex]) newHistory[editingMsgIndex].text = editMsgText;
+            return { ...prev, [activeChatId]: newHistory };
+          });
+          setEditingMsgIndex(null); setEditMsgText('');
+        }
+      };
+
+      // --- ペルソナ管理機能 ---
+      const handleAddPersona = () => {
+        const newId = 'persona_' + Date.now();
+        setPersonas([...personas, { id: newId, name: '新規ペルソナ', text: '' }]);
+        setActivePersonaId(newId);
+      };
+
+      const handleDeletePersona = (id) => {
+        if (personas.length <= 1) { alert('最低1つのペルソナが必要です。'); return; }
+        if (window.confirm('このペルソナを削除しますか？')) {
+          const newPersonas = personas.filter(p => p.id !== id);
+          setPersonas(newPersonas);
+          if (activePersonaId === id) setActivePersonaId(newPersonas[0].id);
+        }
+      };
+
+      const activePersona = personas.find(p => p.id === activePersonaId) || personas[0];
+
+      // --- データ管理 (Export / Import) ---
+      const exportData = () => {
+        const data = { apiKey, personas, activePersonaId, characters, groups, histories, enableAffection, affections };
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `ZetaBackup_${new Date().toISOString().slice(0,10)}.json`; a.click();
+      };
+
+      const importData = (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const data = JSON.parse(event.target.result);
+            if (data.apiKey) setApiKey(data.apiKey);
+            if (data.personas) setPersonas(data.personas);
+            if (data.activePersonaId) setActivePersonaId(data.activePersonaId);
+            if (data.characters) setCharacters(data.characters);
+            if (data.groups) setGroups(data.groups);
+            if (data.histories) setHistories(data.histories);
+            if (data.enableAffection !== undefined) setEnableAffection(data.enableAffection);
+            if (data.affections) setAffections(data.affections);
+            alert('データを復元しました！'); setView('chat');
+          } catch (err) { alert('ファイルの読み込みに失敗しました。'); }
+        };
+        reader.readAsText(file);
+      };
+
+      // --- キャラクタ＆グループ管理系 ---
+      const handleSaveCharacter = (charData) => {
+        if (charData.id) setCharacters(prev => prev.map(c => c.id === charData.id ? charData : c));
+        else {
+          const newChar = { ...charData, id: 'char_' + Date.now() };
+          setCharacters(prev => [...prev, newChar]);
+          setActiveChatId(newChar.id);
+        }
+        setView('chat');
+      };
+
+      const handleSaveGroup = (groupData) => {
+        if (groupData.id) setGroups(prev => prev.map(g => g.id === groupData.id ? groupData : g));
+        else {
+          const newGroup = { ...groupData, id: 'group_' + Date.now() };
+          setGroups(prev => [...prev, newGroup]);
+          setActiveChatId(newGroup.id);
+        }
+        setView('chat');
+      };
+
+      const handleDeleteChat = (id, isGroup) => {
+        if (window.confirm('本当に削除しますか？会話履歴もすべて消去されます。')) {
+          if (isGroup) setGroups(prev => prev.filter(g => g.id !== id));
+          else setCharacters(prev => prev.filter(c => c.id !== id));
+          
+          const newHistories = { ...histories };
+          delete newHistories[id];
+          setHistories(newHistories);
+          if (activeChatId === id) setActiveChatId(null);
+          setView('chat');
+        }
+      };
+
+      const handleClearHistory = (id) => {
+        if (window.confirm('この会話履歴をリセットしますか？')) setHistories(prev => ({ ...prev, [id]: [] }));
+      };
+
+      const handleImageUpload = (e, fieldName, maxSize = 300, isGroup = false) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let { width, height } = img;
+            if (width > height) { if (width > maxSize) { height *= maxSize / width; width = maxSize; } } 
+            else { if (height > maxSize) { width *= maxSize / height; height = maxSize; } }
+            canvas.width = width; canvas.height = height;
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+            
+            const setFn = isGroup ? setEditingGroup : setEditingChar;
+            setFn(prev => ({ ...prev, [fieldName]: canvas.toDataURL('image/jpeg', 0.8) }));
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      };
+
+      const globalBgUrl = (view === 'chat' && activeChat?.bgImageUrl) ? activeChat.bgImageUrl : '';
+
+      // === レンダリング ===
+      if (!apiKey && view !== 'settings') {
+        return (
+          <div className="min-h-screen bg-[#0e0e11] flex items-center justify-center p-4 text-white">
+            <div className="bg-white/5 backdrop-blur-2xl p-10 rounded-3xl max-w-md w-full border border-white/10 shadow-2xl">
+              <h2 className="text-3xl font-bold text-white mb-2">AmuChat</h2>
+              <p className="text-white/50 mb-8 text-sm">
+                APIキーを入力して、あなただけのチャットを始めましょう。
+              </p>
+              <input type="password" placeholder="AIzaSy..." className="w-full p-4 bg-black/40 border border-white/10 rounded-2xl mb-6 text-white focus:outline-none focus:border-white/30 transition-colors" onChange={(e) => setApiKey(e.target.value)} />
+              <button className="w-full bg-white text-black hover:bg-gray-200 font-bold py-4 px-4 rounded-2xl transition-colors shadow-lg" onClick={() => { if(apiKey) setView('chat') }}>はじめる</button>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="flex h-screen w-full bg-[#0e0e11] text-white font-sans overflow-hidden relative">
+          
+          {globalBgUrl && (
+            <div className="absolute inset-0 z-0 transition-opacity duration-1000 ease-in-out">
+              <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${globalBgUrl})` }} />
+              <div className="absolute inset-0 bg-[#0e0e11]/60 backdrop-blur-[40px]" />
+            </div>
+          )}
+
+          {/* === モバイル用サイドバー背景オーバーレイ === */}
+          {isMobileMenuOpen && (
+            <div className="md:hidden fixed inset-0 bg-black/60 z-30" onClick={() => setIsMobileMenuOpen(false)}></div>
+          )}
+
+          {/* === サイドバー === */}
+          <div className={`fixed md:relative flex flex-col z-40 transition-transform duration-300 transform md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} w-72 h-full border-r border-white/5 ${globalBgUrl ? 'bg-black/80 backdrop-blur-md md:bg-black/20' : 'bg-[#16161a]'}`}>
+            <div className="p-6 border-b border-white/5 flex justify-between items-center shrink-0">
+              <h1 className="font-bold text-xl tracking-wider text-white/90">Chats</h1>
+              <button onClick={() => setView('settings')} className="text-white/50 hover:text-white transition-colors">
+                <IconSettings size={22} />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+              {/* キャラクターリスト */}
+              <div className="text-xs font-bold text-white/40 uppercase tracking-wider px-3 mb-2 mt-2 flex justify-between items-center">
+                Characters
+                <button onClick={() => { setEditingChar({ name: '', prompt: '', iconUrl: '', secretProfile: '', unlockAffection: 0, affectionDifficulty: 'normal' }); setView('charEdit'); }} className="hover:text-white"><IconPlus size={14}/></button>
+              </div>
+              {characters.map(char => (
+                <div 
+                  key={char.id} onClick={() => { setActiveChatId(char.id); setView('chat'); setIsMobileMenuOpen(false); }}
+                  className={`flex items-center p-3 cursor-pointer rounded-2xl transition-all duration-200 ${activeChatId === char.id && view === 'chat' ? 'bg-white/15 shadow-sm' : 'hover:bg-white/5'}`}
+                >
+                  <img src={char.iconUrl} alt={char.name} className="w-10 h-10 rounded-full object-cover border border-white/10 shadow-sm" />
+                  <div className="ml-4 font-semibold text-white/90 truncate">{char.name}</div>
+                </div>
+              ))}
+
+              {/* グループリスト */}
+              <div className="text-xs font-bold text-white/40 uppercase tracking-wider px-3 mb-2 mt-6 flex justify-between items-center">
+                Groups
+                <button onClick={() => { setEditingGroup({ name: '', charIds: [], bgImageUrl: '' }); setView('groupEdit'); }} className="hover:text-white"><IconPlus size={14}/></button>
+              </div>
+              {groups.map(group => (
+                <div 
+                  key={group.id} onClick={() => { setActiveChatId(group.id); setView('chat'); setIsMobileMenuOpen(false); }}
+                  className={`flex items-center p-3 cursor-pointer rounded-2xl transition-all duration-200 ${activeChatId === group.id && view === 'chat' ? 'bg-white/15 shadow-sm' : 'hover:bg-white/5'}`}
+                >
+                  <div className="w-10 h-10 rounded-full bg-white/10 border border-white/10 flex items-center justify-center shadow-sm">
+                    <IconUsers size={20} className="text-white/60" />
+                  </div>
+                  <div className="ml-4 font-semibold text-white/90 truncate">{group.name}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* === メインエリア === */}
+          <div className="flex-1 flex flex-col relative z-10">
+            {view === 'chat' && activeChat && (
+              <>
+                {/* ヘッダー */}
+                <div className="h-20 bg-black/10 backdrop-blur-2xl border-b border-white/5 flex items-center justify-between px-4 sm:px-8 z-20 shrink-0">
+                  <div className="flex items-center gap-2 sm:gap-4">
+                    <button className="md:hidden p-2 text-white/70 hover:text-white" onClick={() => setIsMobileMenuOpen(true)}>
+                      <IconMenu size={24} />
+                    </button>
+                    {isGroupChat ? (
+                       <div className="w-11 h-11 rounded-full bg-white/10 border border-white/10 flex items-center justify-center shrink-0"><IconUsers size={24} className="text-white/80" /></div>
+                    ) : (
+                       <img 
+                         src={activeChat?.iconUrl} 
+                         className="w-11 h-11 rounded-full border border-white/10 shadow-md object-cover cursor-pointer hover:opacity-80 transition-opacity" 
+                         onClick={() => setProfileChar(activeChat)}
+                         title="プロフィールを見る"
+                       />
+                    )}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="font-bold text-lg text-white/90">{activeChat?.name}</h2>
+                        {unlimitedMode && <span className="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full border border-red-500/30 font-bold tracking-wider">UNLIMITED</span>}
+                        {/* 単体チャット時のみ好感度を表示 */}
+                        {enableAffection && !isGroupChat && (
+                           <button 
+                             onClick={() => setProfileChar(activeChat)}
+                             className="flex items-center gap-1 text-xs bg-pink-500/20 text-pink-400 px-2 py-0.5 rounded-full border border-pink-500/30 hover:bg-pink-500/30 transition-colors cursor-pointer"
+                             title="プロフィールと好感度を確認"
+                           >
+                             <IconHeart size={12} fill="currentColor" />
+                             <span className="font-bold">{affections[activeChat.id] || 0}</span>
+                           </button>
+                        )}
+                      </div>
+                      <p className="text-xs text-white/40 font-medium">{isGroupChat ? `${activeChat.charIds.length}人のキャラクター` : 'AI キャラクター'}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => handleClearHistory(activeChatId)} className="p-2.5 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors" title="会話をリセット"><IconRefreshCw size={20} /></button>
+                    <button onClick={() => { isGroupChat ? setEditingGroup(activeChat) : setEditingChar(activeChat); setView(isGroupChat ? 'groupEdit' : 'charEdit'); }} className="p-2.5 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors" title="設定を編集"><IconEdit3 size={20} /></button>
+                  </div>
+                </div>
+
+                {/* チャット履歴 */}
+                <div className="flex-1 overflow-y-auto p-4 sm:p-8 flex flex-col gap-6 z-10 scroll-smooth">
+                  {/* 初回メッセージ */}
+                  {!isGroupChat && activeChat?.firstMessage && (
+                    <div className="flex gap-4 max-w-[85%] mt-4">
+                      <img 
+                        src={activeChat.iconUrl} 
+                        className="w-10 h-10 rounded-full object-cover shadow-lg border border-white/10 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity" 
+                        onClick={() => setProfileChar(activeChat)}
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-sm text-white/50 mb-1.5 ml-1 font-medium">{activeChat.name}</span>
+                        <div className="bg-white/10 backdrop-blur-xl text-white/90 px-5 py-3.5 rounded-[1.5rem] rounded-tl-sm border border-white/5 leading-relaxed shadow-sm whitespace-pre-wrap">{renderMessageText(activeChat.firstMessage)}</div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {(!histories[activeChatId] || histories[activeChatId].length === 0) && (!activeChat?.firstMessage || isGroupChat) && (
+                    <div className="text-center mt-20">
+                      <div className="inline-block bg-black/30 backdrop-blur-xl text-white/60 py-3 px-6 rounded-full border border-white/5 text-sm">
+                        メッセージを送って会話を始めましょう
+                      </div>
+                    </div>
+                  )}
+
+                  {(histories[activeChatId] || []).map((msg, i) => {
+                    if (msg.role === 'model' && msg.text === '' && isLoading) return null;
+                    const isEditing = editingMsgIndex === i;
+                    const isLastMsg = i === (histories[activeChatId].length - 1);
+
+                    // ナレーター（情景描写）の吹き出し
+                    if (msg.role === 'narrator') {
+                      return (
+                        <div key={i} className="flex justify-center w-full group relative my-2">
+                          <div className="absolute right-4 top-0 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 z-10">
+                             <button onClick={() => startEditingMessage(i, msg.text)} className="p-1.5 text-white/40 hover:text-white transition-colors bg-black/60 rounded-lg backdrop-blur-md" title="編集"><IconEdit3 size={14} /></button>
+                             <button onClick={() => handleDeleteMessage(i)} className="p-1.5 text-white/40 hover:text-red-400 transition-colors bg-black/60 rounded-lg backdrop-blur-md" title="削除"><IconTrash2 size={14} /></button>
+                          </div>
+                          {isEditing ? (
+                             <div className="w-full max-w-2xl bg-white/10 p-3 rounded-2xl border border-white/20 flex flex-col gap-3 shadow-lg backdrop-blur-xl">
+                               <textarea value={editMsgText} onChange={(e) => setEditMsgText(e.target.value)} className="w-full bg-black/40 text-white/80 p-3 rounded-xl outline-none resize-y min-h-[80px]" />
+                               <div className="flex justify-end gap-2">
+                                 <button onClick={() => setEditingMsgIndex(null)} className="text-xs px-3 py-1.5 text-white/60 hover:text-white font-semibold">キャンセル</button>
+                                 <button onClick={saveEditedMessage} className="text-xs px-4 py-1.5 bg-white text-black rounded-lg font-bold">保存</button>
+                               </div>
+                             </div>
+                          ) : (
+                            <div className="text-white/50 text-[0.95rem] text-center max-w-[85%] whitespace-pre-wrap leading-relaxed py-2 px-8">
+                              * {msg.text} *
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    const isUser = msg.role === 'user';
+
+                    return (
+                      <div key={i} className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'} group relative`}>
+                        {isUser ? (
+                          <div className="flex flex-col items-end max-w-[75%]">
+                            <div className="flex items-center gap-2 mb-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button onClick={() => startEditingMessage(i, msg.text)} className="p-1.5 text-white/40 hover:text-white transition-colors bg-black/40 rounded-lg backdrop-blur-md" title="編集"><IconEdit3 size={14} /></button>
+                              <button onClick={() => handleDeleteMessage(i)} className="p-1.5 text-white/40 hover:text-red-400 transition-colors bg-black/40 rounded-lg backdrop-blur-md" title="削除"><IconTrash2 size={14} /></button>
+                            </div>
+                            {isEditing ? (
+                              <div className="w-full bg-white/10 p-3 rounded-[1.5rem] rounded-tr-sm border border-white/20 flex flex-col gap-3 min-w-[250px] shadow-lg backdrop-blur-xl">
+                                <textarea value={editMsgText} onChange={(e) => setEditMsgText(e.target.value)} className="w-full bg-black/40 text-white p-3 rounded-xl text-sm outline-none resize-y min-h-[80px]" />
+                                <div className="flex justify-end gap-2">
+                                  <button onClick={() => setEditingMsgIndex(null)} className="text-xs px-3 py-1.5 text-white/60 hover:text-white font-semibold">キャンセル</button>
+                                  <button onClick={saveEditedMessage} className="text-xs px-4 py-1.5 bg-white text-black rounded-lg font-bold">保存</button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="bg-white text-black px-6 py-3.5 rounded-[1.5rem] rounded-tr-sm leading-relaxed shadow-md font-medium whitespace-pre-wrap">{renderMessageText(msg.text)}</div>
+                            )}
+                          </div>
+                        ) : (
+                          // AIの発言 (単体 or グループ)
+                          <div className="flex flex-col w-full relative">
+                            {isGroupChat ? (
+                              <div className="flex flex-col gap-4 w-full">
+                                {/* グループチャット時のAI発言（複数キャラ分割描画） */}
+                                <div className="absolute right-4 top-0 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 z-10">
+                                  <button onClick={() => startEditingMessage(i, msg.text)} className="p-1.5 text-white/40 hover:text-white transition-colors bg-black/40 rounded-lg backdrop-blur-md" title="編集"><IconEdit3 size={14} /></button>
+                                  <button onClick={() => handleDeleteMessage(i)} className="p-1.5 text-white/40 hover:text-red-400 transition-colors bg-black/40 rounded-lg backdrop-blur-md" title="削除"><IconTrash2 size={14} /></button>
+                                  {isLastMsg && !isLoading && (
+                                     <button onClick={handleRegenerate} className="p-1.5 text-white/40 hover:text-white transition-colors bg-black/40 rounded-lg backdrop-blur-md" title="再生成"><IconRefreshCw size={14} /></button>
+                                  )}
+                                </div>
+                                {isEditing ? (
+                                  <div className="w-full max-w-3xl bg-white/10 p-3 rounded-[1.5rem] rounded-tl-sm border border-white/20 flex flex-col gap-3 shadow-lg backdrop-blur-xl">
+                                    <textarea value={editMsgText} onChange={(e) => setEditMsgText(e.target.value)} className="w-full bg-black/40 text-white p-3 rounded-xl text-sm outline-none resize-y min-h-[150px]" />
+                                    <div className="flex justify-end gap-2">
+                                      <button onClick={() => setEditingMsgIndex(null)} className="text-xs px-3 py-1.5 text-white/60 hover:text-white font-semibold">キャンセル</button>
+                                      <button onClick={saveEditedMessage} className="text-xs px-4 py-1.5 bg-white text-black rounded-lg font-bold">保存</button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  renderGroupMessage(msg.text, characters.filter(c => activeChat.charIds.includes(c.id)))
+                                )}
+                              </div>
+                            ) : (
+                              // 単体チャット時のAI発言
+                              <div className="flex gap-4 max-w-[85%]">
+                                <img 
+                                  src={activeChat?.iconUrl || 'https://placehold.co/150'} 
+                                  className="w-10 h-10 rounded-full object-cover shadow-lg border border-white/10 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity" 
+                                  onClick={() => setProfileChar(activeChat)}
+                                />
+                                <div className="flex flex-col w-full">
+                                  <div className="flex justify-between items-end mb-1.5 ml-1">
+                                    <span className="text-sm text-white/50 font-medium">{activeChat?.name || 'AI'}</span>
+                                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity ml-4">
+                                      <button onClick={() => startEditingMessage(i, msg.text)} className="p-1.5 text-white/40 hover:text-white transition-colors bg-black/40 rounded-lg backdrop-blur-md" title="編集"><IconEdit3 size={14} /></button>
+                                      <button onClick={() => handleDeleteMessage(i)} className="p-1.5 text-white/40 hover:text-red-400 transition-colors bg-black/40 rounded-lg backdrop-blur-md" title="削除"><IconTrash2 size={14} /></button>
+                                      {isLastMsg && !isLoading && (
+                                         <button onClick={handleRegenerate} className="p-1.5 text-white/40 hover:text-white transition-colors bg-black/40 rounded-lg backdrop-blur-md" title="再生成"><IconRefreshCw size={14} /></button>
+                                      )}
+                                    </div>
+                                  </div>
+                                  {isEditing ? (
+                                    <div className="w-full bg-white/10 p-3 rounded-[1.5rem] rounded-tl-sm border border-white/20 flex flex-col gap-3 min-w-[250px] shadow-lg backdrop-blur-xl">
+                                      <textarea value={editMsgText} onChange={(e) => setEditMsgText(e.target.value)} className="w-full bg-black/40 text-white p-3 rounded-xl text-sm outline-none resize-y min-h-[80px]" />
+                                      <div className="flex justify-end gap-2">
+                                        <button onClick={() => setEditingMsgIndex(null)} className="text-xs px-3 py-1.5 text-white/60 hover:text-white font-semibold">キャンセル</button>
+                                        <button onClick={saveEditedMessage} className="text-xs px-4 py-1.5 bg-white text-black rounded-lg font-bold">保存</button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="bg-white/10 backdrop-blur-xl text-white/90 px-5 py-3.5 rounded-[1.5rem] rounded-tl-sm border border-white/5 leading-relaxed shadow-sm w-fit whitespace-pre-wrap">{renderMessageText(msg.text)}</div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  
+                  {/* ローディング */}
+                  {isLoading && histories[activeChatId]?.[histories[activeChatId].length - 1]?.text === '' && (
+                    <div className="flex gap-4 max-w-[85%]">
+                      {isGroupChat ? (
+                        <div className="w-10 h-10 rounded-full border border-white/10 flex-shrink-0 opacity-50 bg-white/5 flex items-center justify-center"><IconUsers size={20} className="text-white/40" /></div>
+                      ) : (
+                        <img src={activeChat?.iconUrl} className="w-10 h-10 rounded-full object-cover shadow-lg border border-white/10 flex-shrink-0 opacity-50" />
+                      )}
+                      <div className="flex flex-col justify-center">
+                        <div className="bg-white/5 backdrop-blur-xl text-white/40 px-5 py-4 rounded-[1.5rem] rounded-tl-sm border border-white/5 flex gap-1.5 items-center">
+                          <div className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce"></div>
+                          <div className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                          <div className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div ref={messagesEndRef} className="h-8" />
+                </div>
+
+                {/* === 入力エリア === */}
+                <div className="px-4 pb-8 pt-2 z-20">
+                  {/* グループチャット時の返信ターゲット選択UI */}
+                  {isGroupChat && (
+                    <div className="max-w-4xl mx-auto flex gap-3 mb-3 px-4 overflow-x-auto scrollbar-hide">
+                      <span className="text-xs font-bold text-white/40 flex items-center mr-2">返信させるキャラ:</span>
+                      {activeChat.charIds.map(cId => {
+                        const c = characters.find(x => x.id === cId);
+                        if (!c) return null;
+                        const isSelected = targetGroupCharId === c.id;
+                        return (
+                          <div key={c.id} onClick={() => setTargetGroupCharId(c.id)} className="flex flex-col items-center gap-1 cursor-pointer group">
+                            <img src={c.iconUrl} className={`w-9 h-9 rounded-full object-cover transition-all duration-300 ${isSelected ? 'ring-2 ring-white scale-110 shadow-lg' : 'opacity-40 group-hover:opacity-80'}`} title={`${c.name} に返信させる`} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div className="max-w-4xl mx-auto relative flex items-end bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-1.5 shadow-2xl transition-all focus-within:bg-black/60 focus-within:border-white/20">
+                    
+                    {/* ナレーターモード切替トグル */}
+                    <button 
+                      onClick={() => setInputMode(prev => prev === 'user' ? 'narrator' : 'user')}
+                      className={`m-1 p-3 rounded-full transition-colors flex-shrink-0 ${inputMode === 'narrator' ? 'bg-white/20 text-white shadow-inner' : 'text-white/40 hover:bg-white/5 hover:text-white'}`}
+                      title={inputMode === 'narrator' ? 'ナレーター(情景)モード' : 'ユーザー(セリフ)モード'}
+                    >
+                      {inputMode === 'narrator' ? <IconBook size={20} /> : <IconUser size={20} />}
+                    </button>
+
+                    {/* * (行動描写) 挿入ボタン */}
+                    <button 
+                      onClick={insertAsterisk}
+                      className="m-1 px-3 py-2 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors flex-shrink-0 font-bold text-xl flex items-center justify-center h-10 w-10"
+                      title="* (行動描写) を挿入"
+                    >
+                      *
+                    </button>
+
+                    <textarea
+                      ref={textareaRef}
+                      value={inputText}
+                      onChange={handleInput}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
+                      placeholder={inputMode === 'narrator' ? "* 情景やナレーションを入力..." : "メッセージを入力..."}
+                      className="w-full bg-transparent text-white/90 placeholder-white/30 px-3 py-3.5 outline-none resize-none max-h-32 leading-relaxed"
+                      rows={1}
+                      disabled={isLoading}
+                    />
+                    
+                    {isLoading ? (
+                      <button onClick={handleStop} className="m-1 p-3 bg-red-500/80 text-white rounded-full hover:bg-red-500 transition-colors shadow-sm flex-shrink-0 animate-pulse" title="生成を停止">
+                        <IconSquare size={20} />
+                      </button>
+                    ) : inputText.trim() ? (
+                      <button onClick={handleSendMessage} className="m-1 p-3 bg-white text-black rounded-full hover:bg-gray-200 transition-colors shadow-sm flex-shrink-0" title="送信">
+                        <IconSend size={20} />
+                      </button>
+                    ) : (
+                      <button onClick={handleContinue} className="m-1 p-3 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors flex-shrink-0" title="続きを書かせる">
+                        <IconPlay size={20} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {view === 'chat' && !activeChatId && (
+              <div className="flex-1 flex flex-col">
+                <div className="h-20 bg-transparent flex items-center px-4 sm:px-8 z-20 shrink-0">
+                  <button className="md:hidden p-2 text-white/70 hover:text-white" onClick={() => setIsMobileMenuOpen(true)}>
+                    <IconMenu size={24} />
+                  </button>
+                </div>
+                <div className="flex-1 flex items-center justify-center -mt-20">
+                  <div className="text-white/40 bg-black/20 backdrop-blur-md px-6 py-3 rounded-full border border-white/5">
+                    左側のメニューからチャットを選択してください
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* === プロフィール確認モーダル (好感度連動) === */}
+            {profileChar && (
+              <div className="absolute inset-0 z-[60] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="bg-[#1a1a1f] w-full max-w-lg rounded-[2rem] p-8 border border-white/10 shadow-2xl m-auto relative">
+                  <button onClick={() => setProfileChar(null)} className="absolute top-6 right-6 p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors"><IconX size={20} /></button>
+                  
+                  <div className="flex flex-col items-center mb-6">
+                    <img src={profileChar.iconUrl} className="w-24 h-24 rounded-full object-cover border-4 border-white/10 shadow-xl mb-4" />
+                    <h2 className="text-2xl font-bold text-white">{profileChar.name}</h2>
+                  </div>
+
+                  <div className="space-y-6">
+                    {/* 好感度ゲージ */}
+                    {enableAffection && (
+                      <div className="bg-black/30 p-5 rounded-2xl border border-white/5 text-center">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          <IconHeart className="text-pink-500" fill="currentColor" size={24} />
+                          <span className="text-xl font-bold text-white/90">好感度: {affections[profileChar.id] || 0}</span>
+                        </div>
+                        {profileChar.unlockAffection > 0 && (
+                          <div className="w-full bg-white/10 rounded-full h-2 mt-3 overflow-hidden">
+                            <div 
+                              className="bg-pink-500 h-2 rounded-full transition-all duration-1000" 
+                              style={{ width: `${Math.min(100, Math.max(0, ((affections[profileChar.id] || 0) / profileChar.unlockAffection) * 100))}%` }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* 追加プロフィール表示エリア */}
+                    <div className="bg-black/30 p-5 rounded-2xl border border-white/5">
+                       <h3 className="text-sm font-bold text-white/40 uppercase tracking-wider mb-3">追加プロフィール</h3>
+                       {!enableAffection ? (
+                         <p className="text-white/60 text-sm">「設定」で好感度システムをONにすると解放要素が表示されます。</p>
+                       ) : (affections[profileChar.id] || 0) >= (profileChar.unlockAffection || 0) ? (
+                         <div className="text-white/90 text-sm leading-relaxed whitespace-pre-wrap">
+                           <div className="flex items-center gap-2 text-pink-400 mb-2"><IconUnlock size={16} /> 解放済み</div>
+                           {profileChar.secretProfile || '追加のプロフィール情報はありません。'}
+                         </div>
+                       ) : (
+                         <div className="text-white/40 text-sm flex flex-col items-center justify-center py-6 gap-3">
+                           <IconLock size={32} className="opacity-50" />
+                           <p>好感度が {profileChar.unlockAffection} に達すると解放されます</p>
+                         </div>
+                       )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* === 設定＆編集モーダル === */}
+            {(view === 'settings' || view === 'charEdit' || view === 'groupEdit') && (
+              <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+                
+                {/* 1. アプリ設定モーダル */}
+                {view === 'settings' && (
+                  <div className="bg-[#1a1a1f] w-full max-w-2xl rounded-[2rem] p-8 border border-white/10 shadow-2xl m-auto">
+                    <div className="flex justify-between items-center mb-8">
+                      <h2 className="text-2xl font-bold flex items-center gap-2"><IconSettings className="text-white/70"/> アプリ設定</h2>
+                      <button onClick={() => setView('chat')} className="p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors"><IconX size={20} /></button>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-white/60 mb-2">Gemini APIキー</label>
+                        <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="w-full p-4 bg-black/30 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-white/30" />
+                      </div>
+
+                      <div className="pt-6 mt-4 border-t border-white/5 flex flex-col gap-6">
+                        {/* アンリミテッドモード */}
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h3 className="text-lg font-semibold text-white/90">アンリミテッドモード</h3>
+                            <p className="text-xs text-white/40 mt-1">AIのセーフティフィルターを解除し、過激な表現や描写を許可します。</p>
+                          </div>
+                          <button 
+                            onClick={() => setUnlimitedMode(!unlimitedMode)}
+                            className={`w-12 h-6 rounded-full transition-colors relative flex-shrink-0 ${unlimitedMode ? 'bg-red-500' : 'bg-white/20'}`}
+                          >
+                            <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${unlimitedMode ? 'translate-x-6' : ''}`} />
+                          </button>
+                        </div>
+                        {/* 好感度システム */}
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h3 className="text-lg font-semibold text-white/90 flex items-center gap-2">好感度システム <IconHeart size={16} className="text-pink-500" fill="currentColor"/></h3>
+                            <p className="text-xs text-white/40 mt-1">AIがユーザーへの好意を自律的に計算し、態度や隠しプロフを解放します。</p>
+                          </div>
+                          <button 
+                            onClick={() => setEnableAffection(!enableAffection)}
+                            className={`w-12 h-6 rounded-full transition-colors relative flex-shrink-0 ${enableAffection ? 'bg-pink-500' : 'bg-white/20'}`}
+                          >
+                            <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${enableAffection ? 'translate-x-6' : ''}`} />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="pt-6 mt-4 border-t border-white/5 space-y-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <h3 className="text-lg font-semibold text-white/90">あなたのペルソナ設定</h3>
+                          <button onClick={handleAddPersona} className="flex items-center gap-1 text-sm bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors font-semibold"><IconPlus size={16} /> 追加</button>
+                        </div>
+                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                          {personas.map(p => (
+                            <button key={p.id} onClick={() => setActivePersonaId(p.id)} className={`whitespace-nowrap px-4 py-2 rounded-xl text-sm font-semibold transition-colors border ${activePersonaId === p.id ? 'bg-white text-black border-white' : 'bg-black/30 text-white/60 border-white/10 hover:bg-white/10'}`}>
+                              {p.name || '無名'}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="bg-black/20 p-5 rounded-2xl border border-white/5 space-y-4 relative">
+                          <div className="flex justify-between items-center">
+                            <label className="block text-sm font-semibold text-white/60">ペルソナ名</label>
+                            {personas.length > 1 && <button onClick={() => handleDeletePersona(activePersona.id)} className="text-red-400 hover:text-red-300 text-xs flex items-center gap-1 font-semibold"><IconTrash2 size={14} /> 削除</button>}
+                          </div>
+                          <input type="text" value={activePersona.name} onChange={(e) => setPersonas(personas.map(p => p.id === activePersona.id ? {...p, name: e.target.value} : p))} className="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-white focus:outline-none focus:border-white/30" placeholder="名前" />
+                          <label className="block text-sm font-semibold text-white/60 mt-4 mb-2">詳細設定（容姿、性格など）</label>
+                          <textarea value={activePersona.text} onChange={(e) => setPersonas(personas.map(p => p.id === activePersona.id ? {...p, text: e.target.value} : p))} className="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-white/90 focus:outline-none focus:border-white/30 h-32 resize-y leading-relaxed text-sm" />
+                        </div>
+                      </div>
+
+                      <div className="pt-6 mt-4 border-t border-white/5 space-y-4">
+                        <h3 className="text-sm font-semibold text-white/60">データ管理 (バックアップ)</h3>
+                        <div className="flex flex-wrap gap-4">
+                          <button onClick={exportData} className="flex items-center gap-2 px-5 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors font-semibold text-sm"><IconDownload size={18} /> データを書き出す</button>
+                          <div className="relative">
+                            <button onClick={() => document.getElementById('import-upload').click()} className="flex items-center gap-2 px-5 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors font-semibold text-sm"><IconUpload size={18} /> データを復元する</button>
+                            <input id="import-upload" type="file" accept=".json" className="hidden" onChange={importData} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. キャラクター編集モーダル */}
+                {view === 'charEdit' && editingChar && (
+                  <div className="bg-[#1a1a1f] w-full max-w-3xl rounded-[2rem] p-8 border border-white/10 shadow-2xl m-auto">
+                    <div className="flex justify-between items-center mb-8">
+                      <h2 className="text-2xl font-bold text-white">{editingChar.id ? 'キャラクター設定' : '新しいキャラクター'}</h2>
+                      <button onClick={() => setView('chat')} className="p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors"><IconX size={20} /></button>
+                    </div>
+                    <div className="space-y-6">
+                      <div className="flex flex-col sm:flex-row gap-6">
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="relative group cursor-pointer rounded-full overflow-hidden border-2 border-white/10 w-28 h-28 flex-shrink-0 bg-black/40 shadow-inner" onClick={() => document.getElementById('icon-upload-char').click()}>
+                            <img src={editingChar.iconUrl || `https://placehold.co/150x150/333/fff?text=${editingChar.name?.charAt(0) || '?'}`} className="w-full h-full object-cover group-hover:opacity-30 transition-opacity" />
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/60"><IconUpload className="text-white drop-shadow-md" size={28} /></div>
+                          </div>
+                          <input id="icon-upload-char" type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'iconUrl', 300, false)} />
+                        </div>
+                        <div className="flex-1 space-y-4">
+                          <div><label className="block text-sm font-semibold text-white/60 mb-2">キャラクター名</label><input type="text" value={editingChar.name || ''} onChange={(e) => setEditingChar({...editingChar, name: e.target.value})} className="w-full p-4 bg-black/30 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-white/30" /></div>
+                          <div><label className="block text-sm font-semibold text-white/60 mb-2">初回メッセージ (Greeting)</label><input type="text" value={editingChar.firstMessage || ''} onChange={(e) => setEditingChar({...editingChar, firstMessage: e.target.value})} className="w-full p-4 bg-black/30 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-white/30 text-sm" /></div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-semibold text-white/60 mb-2">プロンプト (システム設定・ルール)</label>
+                        <textarea value={editingChar.prompt || ''} onChange={(e) => setEditingChar({...editingChar, prompt: e.target.value})} className="w-full p-5 bg-black/30 border border-white/10 rounded-2xl text-white/90 focus:outline-none focus:border-white/30 h-48 resize-y leading-relaxed text-sm" />
+                      </div>
+
+                      <div className="pt-6 mt-4 border-t border-white/5 space-y-4">
+                        <h3 className="text-lg font-semibold text-pink-400 flex items-center gap-2"><IconHeart size={18}/> 好感度＆隠しプロフィール設定</h3>
+                        
+                        <div className="flex flex-col sm:flex-row gap-4">
+                          <div className="flex-1">
+                            <label className="block text-sm font-semibold text-white/60 mb-2">プロフィール解放に必要な好感度</label>
+                            <input type="number" min="0" value={editingChar.unlockAffection || 0} onChange={(e) => setEditingChar({...editingChar, unlockAffection: parseInt(e.target.value) || 0})} className="w-full p-4 bg-black/30 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-white/30 text-center" />
+                          </div>
+                          <div className="flex-1">
+                            <label className="block text-sm font-semibold text-white/60 mb-2">好感度の上がりやすさ</label>
+                            <select 
+                              value={editingChar.affectionDifficulty || 'normal'} 
+                              onChange={(e) => setEditingChar({...editingChar, affectionDifficulty: e.target.value})}
+                              className="w-full p-4 bg-black/30 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-white/30 appearance-none"
+                            >
+                              <option value="easy">上がりやすい</option>
+                              <option value="normal">普通</option>
+                              <option value="hard">上がりづらい</option>
+                              <option value="very_hard">極悪（ほぼ上がらない）</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-white/60 mb-2">解放される追加プロフィール・裏設定</label>
+                          <textarea value={editingChar.secretProfile || ''} onChange={(e) => setEditingChar({...editingChar, secretProfile: e.target.value})} className="w-full p-5 bg-black/30 border border-white/10 rounded-2xl text-white/90 focus:outline-none focus:border-white/30 h-32 resize-y leading-relaxed text-sm" placeholder="好感度に達した時だけ、ユーザーが読めるようになる情報です。" />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between pt-6 mt-4 border-t border-white/5">
+                        {editingChar.id ? <button onClick={() => handleDeleteChat(editingChar.id, false)} className="flex items-center gap-2 text-red-400 hover:text-red-300 px-4 py-2 rounded-xl hover:bg-red-400/10 transition-colors font-medium"><IconTrash2 size={18} /> 削除</button> : <div></div>}
+                        <div className="flex gap-3">
+                          <button onClick={() => setView('chat')} className="px-6 py-3 rounded-xl text-white/70 hover:bg-white/10 transition-colors font-semibold">キャンセル</button>
+                          <button onClick={() => handleSaveCharacter(editingChar)} disabled={!editingChar.name || !editingChar.prompt} className="flex items-center gap-2 bg-white text-black hover:bg-gray-200 px-8 py-3 rounded-xl disabled:opacity-50 transition-colors font-bold shadow-lg">保存する</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. グループ編集モーダル */}
+                {view === 'groupEdit' && editingGroup && (
+                  <div className="bg-[#1a1a1f] w-full max-w-2xl rounded-[2rem] p-8 border border-white/10 shadow-2xl m-auto">
+                    <div className="flex justify-between items-center mb-8">
+                      <h2 className="text-2xl font-bold text-white flex items-center gap-3"><IconUsers className="text-white/70"/> {editingGroup.id ? 'グループ設定' : '新しいグループチャット'}</h2>
+                      <button onClick={() => setView('chat')} className="p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors"><IconX size={20} /></button>
+                    </div>
+                    <div className="space-y-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-white/60 mb-2">グループ名</label>
+                        <input type="text" value={editingGroup.name || ''} onChange={(e) => setEditingGroup({...editingGroup, name: e.target.value})} className="w-full p-4 bg-black/30 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-white/30" placeholder="例: マフィアの集会" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-white/60 mb-2">参加キャラクター (複数選択可)</label>
+                        <div className="flex flex-col gap-2 bg-black/30 p-4 rounded-2xl border border-white/10 max-h-60 overflow-y-auto">
+                          {characters.length === 0 && <p className="text-white/40 text-sm">キャラクターが作成されていません。</p>}
+                          {characters.map(c => (
+                            <label key={c.id} className="flex items-center gap-4 cursor-pointer p-3 hover:bg-white/5 rounded-xl transition-colors border border-transparent hover:border-white/5">
+                              <input 
+                                type="checkbox" 
+                                checked={editingGroup.charIds?.includes(c.id)}
+                                onChange={(e) => {
+                                  const newIds = e.target.checked 
+                                    ? [...(editingGroup.charIds || []), c.id] 
+                                    : (editingGroup.charIds || []).filter(id => id !== c.id);
+                                  setEditingGroup({...editingGroup, charIds: newIds});
+                                }}
+                                className="w-5 h-5 rounded border-white/20 bg-black/50 text-white focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                              />
+                              <img src={c.iconUrl} className="w-10 h-10 rounded-full object-cover border border-white/10" />
+                              <span className="font-semibold text-white/90">{c.name}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between items-end mb-2">
+                          <label className="block text-sm font-semibold text-white/60">背景画像</label>
+                          <button onClick={() => document.getElementById('bg-upload-group').click()} className="text-xs flex items-center gap-1 text-white/70 hover:text-white transition-colors bg-white/10 px-3 py-1.5 rounded-full"><IconImageIcon size={14} /> 画像を選択</button>
+                          <input id="bg-upload-group" type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'bgImageUrl', 800, true)} />
+                        </div>
+                        {editingGroup.bgImageUrl && <div className="h-32 w-full rounded-2xl bg-cover bg-center border border-white/10 shadow-inner mt-3" style={{ backgroundImage: `url(${editingGroup.bgImageUrl})` }} />}
+                      </div>
+                      <div className="flex justify-between pt-6 mt-4 border-t border-white/5">
+                        {editingGroup.id ? <button onClick={() => handleDeleteChat(editingGroup.id, true)} className="flex items-center gap-2 text-red-400 hover:text-red-300 px-4 py-2 rounded-xl hover:bg-red-400/10 transition-colors font-medium"><IconTrash2 size={18} /> 削除</button> : <div></div>}
+                        <div className="flex gap-3">
+                          <button onClick={() => setView('chat')} className="px-6 py-3 rounded-xl text-white/70 hover:bg-white/10 transition-colors font-semibold">キャンセル</button>
+                          <button onClick={() => handleSaveGroup(editingGroup)} disabled={!editingGroup.name || !editingGroup.charIds || editingGroup.charIds.length === 0} className="flex items-center gap-2 bg-white text-black hover:bg-gray-200 px-8 py-3 rounded-xl disabled:opacity-50 transition-colors font-bold shadow-lg">保存する</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
